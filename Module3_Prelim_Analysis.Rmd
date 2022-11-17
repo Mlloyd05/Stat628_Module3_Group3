@@ -25,14 +25,6 @@ library(stopwords)
 coffee_shops <- read_csv("/Users/marwanlloyd/Github/Stat628_Module3_Group3/best_filtered_smaller_data.csv")
 ```
 
-
-```{r}
-first_10_sample <- coffee_shops[1:10,]
-first_10_sentiment <-analyzeSentiment(first_10_sample$text)
-#convertToDirection(first_10_sentiment$SentimentQDAP)
-responses <- c(+1,+1,-1,+1,+1,+1,+1,+1,+1,+1)
-compareToResponse(first_10_sentiment, responses)
-```
 ```{r}
 #Find all reviews that include bake in them 
 grepl("Bake",coffee_shops$text, fixed = FALSE, ignore.case = TRUE)
@@ -46,14 +38,21 @@ table(coffee_shops$state)
 #filter to only PA because that has the most 
 
 PA_shops <- coffee_shops[coffee_shops$state == "PA",]
+
+#Get all PAs that aren't starbucks 
+PA_shops_2 <- PA_shops[!grepl("Starbuck", PA_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
 ```
 
 ```{r}
 PA_shops$Sent_QDAP <- analyzeSentiment(PA_shops$text)$SentimentQDAP
+PA_shops <- PA_shops[!is.na(PA_shops$Sent_QDAP),]
 PA_shops$Sent_direct <- convertToDirection(PA_shops$Sent_QDAP)
 PA_shops$Sent_resp <- 0
-PA_shops$Sent_resp[PA_shops$Sent_direct == "positive"] <- 1
-PA_shops$Sent_resp[PA_shops$Sent_direct == "negative"] <- -1
+#PA_shops$Sent_resp[PA_shops$Sent_direct == "positive"] <- 1
+#PA_shops$Sent_resp[PA_shops$Sent_direct == "negative"] <- -1
+## Changing to handle adjusted scores 
+PA_shops$Sent_resp[PA_shops$Sent_QDAP < quantile(PA_shops$Sent_QDAP)[3] - .05] <- -1
+PA_shops$Sent_resp[PA_shops$Sent_QDAP > quantile(PA_shops$Sent_QDAP)[3] + .05] <- 1
 
 ```
 
@@ -148,21 +147,33 @@ filtered_negative_df <- negative_df %>%
 
 ```{r}
 #Add additional filtering down to keywords
-extra_removal_words <- c("starbucks", "ive", "didnt")
-filtered_positive_df <- positive_df %>% 
+extra_removal_words <- c("starbucks", "ive", "didnt", "dont", "one", "can", "get", "just", "also", "know", "great", "good", "love", "make", "like", "place", "really", "even", "always", "best", "well", "coffee")
+filtered_positive_df <- filtered_positive_df %>% 
   filter(!(word %in% extra_removal_words))
 
-filtered_negative_df <- negative_df %>% 
+filtered_negative_df <- filtered_negative_df %>% 
   filter(!(word %in% extra_removal_words))
 ```
 
 ```{r}
 #Generating Positive Word Cloud
-wordcloud(words = filtered_positive_df$word, freq = filtered_positive_df$freq, min.freq = 1,           max.words=200, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+wordcloud(words = filtered_positive_df$word, freq = filtered_positive_df$freq, min.freq = 1,           max.words=20, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
 ```
 
 ```{r}
 #generate negative word cloud 
-wordcloud(words = filtered_negative_df$word, freq = filtered_negative_df$freq, min.freq = 1,           max.words=200, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+wordcloud(words = filtered_negative_df$word, freq = filtered_negative_df$freq, min.freq = 1,           max.words=20, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+```
+
+
+```{r}
+#generate positive word cloud of positive exclusive words 
+wordcloud(words = filtered_positive_df[!(filtered_positive_df$word %in% head(filtered_negative_df$word, n = 30)),]$word, freq = filtered_positive_df[!(filtered_positive_df$word %in% head(filtered_negative_df$word, n = 30)),]$freq, min.freq = 1,           max.words=20, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+```
+
+
+```{r}
+#generate negative word cloud of negative exclusive words 
+wordcloud(words = filtered_negative_df[!(filtered_negative_df$word %in% head(filtered_positive_df$word, n = 30)),]$word, freq = filtered_negative_df[!(filtered_negative_df$word %in% head(filtered_positive_df$word, n = 30)),]$freq, min.freq = 1,           max.words=20, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
 ```
 
