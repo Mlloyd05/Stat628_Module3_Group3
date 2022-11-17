@@ -22,7 +22,7 @@ library(stopwords)
 
 ```{r}
 coffee_shops <- read_csv("/Users/marwanlloyd/Github/Stat628_Module3_Group3/best_filtered_smaller_data.csv")
-starbucks <- coffee_shops[!grepl("Starbuck", coffee_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
+starbucks <- coffee_shops[grepl("Starbuck", coffee_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
 ## IF WE WANT TO CHANGE TO NON STARBUCKS THEN MAKE THIS BELOW
 ##coffee_shops[!grepl("Starbuck", coffee_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
 ```
