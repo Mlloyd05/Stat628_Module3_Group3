@@ -1,0 +1,66 @@
+---
+title: "Module3_Prelim"
+author: "Marwan Lloyd"
+date: '2022-11-17'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(shiny)
+library(tidyverse)
+library(lubridate)
+library(tidygraph)
+library(ggraph)
+library(ggplot2)
+library(utils)
+library(SentimentAnalysis)
+library(SnowballC)
+```
+
+
+```{r}
+coffee_shops <- read_csv("/Users/marwanlloyd/Github/Stat628_Module3_Group3/best_filtered_smaller_data.csv")
+```
+
+
+```{r}
+first_10_sample <- coffee_shops[1:10,]
+first_10_sentiment <-analyzeSentiment(first_10_sample$text)
+#convertToDirection(first_10_sentiment$SentimentQDAP)
+responses <- c(+1,+1,-1,+1,+1,+1,+1,+1,+1,+1)
+compareToResponse(first_10_sentiment, responses)
+```
+```{r}
+#Find all reviews that include bake in them 
+grepl("Bake",coffee_shops$text, fixed = FALSE, ignore.case = TRUE)
+```
+
+```{r}
+#Count reviews per state 
+
+table(coffee_shops$state)
+
+#filter to only PA because that has the most 
+
+PA_shops <- coffee_shops[coffee_shops$state == "PA",]
+```
+
+```{r}
+PA_shops$Sent_QDAP <- analyzeSentiment(PA_shops$text)$SentimentQDAP
+PA_shops$Sent_direct <- convertToDirection(PA_shops$Sent_QDAP)
+PA_shops$Sent_resp <- 0
+PA_shops$Sent_resp[PA_shops$Sent_direct == "positive"] <- 1
+PA_shops$Sent_resp[PA_shops$Sent_direct == "negative"] <- -1
+
+```
+
+
+```{r}
+#Plot Sentiment Values
+plotSentiment(PA_shops$Sent_QDAP)
+```
+
+```{r}
+ggplot(PA_shops)+
+  geom_point(aes(PA_shops$stars_business, PA_shops$Sent_QDAP))
+```
