@@ -64,3 +64,20 @@ plotSentiment(PA_shops$Sent_QDAP)
 ggplot(PA_shops)+
   geom_point(aes(PA_shops$stars_business, PA_shops$Sent_QDAP))
 ```
+
+
+```{r}
+avg_stars_and_sent <- aggregate(cbind(Sent_QDAP,stars_business) ~ name_business_or_review + address, PA_shops, mean)
+```
+
+```{r}
+#linear regression on the averages b/w stars and sentiment
+summary(lm(stars_business ~ Sent_QDAP, avg_stars_and_sent))
+```
+
+```{r}
+#linear regression when not averaged out
+summary(lm(stars_business ~ Sent_QDAP, PA_shops))
+```
+
+The big takeaway b/w the 2 linear regressions done above, is that 1 individual review sentiment may not be a major predictor for star rating, but the average of them are. So that's why it's important to listen to ways to improve reviews. 
