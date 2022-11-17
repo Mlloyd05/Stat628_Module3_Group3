@@ -62,7 +62,9 @@ plotSentiment(PA_shops$Sent_QDAP)
 
 ```{r}
 ggplot(PA_shops)+
-  geom_point(aes(PA_shops$stars_business, PA_shops$Sent_QDAP))
+  geom_point(aes(PA_shops$stars_business, PA_shops$Sent_QDAP)) +
+  labs(x = "Business Rating",
+       y = "Review Sentiment Score") + theme(plot.title = element_text(hjust = 0.5)) + labs(title = "Review Sentiment Spread Across Ratings")
 ```
 
 
@@ -81,3 +83,11 @@ summary(lm(stars_business ~ Sent_QDAP, PA_shops))
 ```
 
 The big takeaway b/w the 2 linear regressions done above, is that 1 individual review sentiment may not be a major predictor for star rating, but the average of them are. So that's why it's important to listen to ways to improve reviews. 
+
+```{r}
+plot(avg_stars_and_sent$Sent_QDAP, avg_stars_and_sent$stars_business,
+     main = "Avg Sentiment vs. Business Star Rating",
+     xlab = "Avg Sentiment",
+     ylab = "Star Rating")
+abline(lm(stars_business ~ Sent_QDAP, avg_stars_and_sent), col = "red")
+```
