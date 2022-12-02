@@ -1,0 +1,71 @@
+---
+title: "Module3_Shiny_Markdown"
+author: "Marwan Lloyd"
+date: '2022-11-17'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(shiny)
+library(tidyverse)
+library(lubridate)
+library(tidygraph)
+library(ggraph)
+library(ggplot2)
+library(utils)
+library(SentimentAnalysis)
+library(SnowballC)
+library(wordcloud)
+library(tm)
+library(stopwords)
+library(shinythemes)
+```
+
+
+```{r}
+coffee_shops <- read_csv("/Users/marwanlloyd/Github/Stat628_Module3_Group3/best_filtered_smaller_data.csv")
+```
+
+```{r}
+#Find all reviews that include bake in them 
+grepl("Bake",coffee_shops$text, fixed = FALSE, ignore.case = TRUE)
+```
+
+```{r}
+#Count reviews per state 
+
+table(coffee_shops$state)
+
+#filter to only PA because that has the most 
+
+PA_shops <- coffee_shops[coffee_shops$state == "PA",]
+
+#Get all PAs that aren't starbucks 
+PA_shops_2 <- PA_shops[!grepl("Starbuck", PA_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
+```
+
+```{r SHINY APP}
+ui <- 
+  navbarPage("Group 3 Shiny", collapsible = TRUE, inverse = TRUE, theme = shinytheme("spacelab"),
+             tabPanel("Store Selection",
+                      sidebarLayout(sidebarPanel(selectInput("Shop", "Shop:", choices = sort(unique(PA_shops$name_business_or_review))), 
+                                                 conditionalPanel("input.Shop!=''",
+                                                                  uiOutput("address"))),
+                                    mainPanel("Selected Shop Information:"),
+                      )
+             ),
+             
+             tabPanel("About", p("UPDATE THIS FOR MODULE 3 INFORMATION")),
+             
+             tabPanel("Contact", p("This shiny app is maintained by Marwan Lloyd '23. For any questions, concerns, or feedback please reach out him at either of the below emails:"), tags$address("Marwan.Lloyd@Wisc.edu"), tags$address("Melloyd2@Wisc.edu"))
+  )
+
+server <- function(input, output) { 
+  output$address <- renderUI({
+    selectInput("Address", "Address:", choices = unique(PA_shops[PA_shops$name_business_or_review == input$Shop,]$address))
+  })
+  
+}
+shinyApp(ui = ui, server = server)
+```
+
