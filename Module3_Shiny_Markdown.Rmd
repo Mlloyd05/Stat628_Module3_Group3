@@ -19,6 +19,7 @@ library(wordcloud)
 library(tm)
 library(stopwords)
 library(shinythemes)
+library(leaflet)
 ```
 
 
@@ -51,10 +52,11 @@ ui <-
                       sidebarLayout(sidebarPanel(selectInput("Shop", "Shop:", choices = sort(unique(PA_shops$name_business_or_review))), 
                                                  conditionalPanel("input.Shop!=''",
                                                                   uiOutput("address"))),
-                                    mainPanel("Selected Shop Information:"),
+                                    mainPanel(leafletOutput("mymap")),
                       )
              ),
              
+            
              tabPanel("About", p("UPDATE THIS FOR MODULE 3 INFORMATION")),
              
              tabPanel("Contact", p("This shiny app is maintained by Marwan Lloyd '23. For any questions, concerns, or feedback please reach out him at either of the below emails:"), tags$address("Marwan.Lloyd@Wisc.edu"), tags$address("Melloyd2@Wisc.edu"))
@@ -64,6 +66,13 @@ server <- function(input, output) {
   output$address <- renderUI({
     selectInput("Address", "Address:", choices = unique(PA_shops[PA_shops$name_business_or_review == input$Shop,]$address))
   })
+  
+  output$mymap <- renderLeaflet({
+   m <- leaflet() %>%
+          addTiles() %>%
+          setView(lng = -75.1624776, lat = 39.9562897, zoom = 13)
+   m
+ })
   
 }
 shinyApp(ui = ui, server = server)
