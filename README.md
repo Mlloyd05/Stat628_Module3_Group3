@@ -21,8 +21,8 @@ In this module, we focus on using data from Yelp which contains information abou
     - Module3_Shiny_Markdown.Rmd              
     - Xingrong.ipynb
 * Data
-    - PA_Yelp_Coffee_Data.csv         
-    - best_filtered_smaller_data.csv
+    - PA_Yelp_Coffee_Data.csv (Yelp Data filtered down to coffee shops in Pennsylvania) 
+    - top_words.csv (the top 25 impactful positive and negative words found via sentiment analysis in PA coffee reviews)
 * Image
 * PA_Coffee_Shiny
 * Presentations
