@@ -74,6 +74,18 @@ ggplot(PA_shops)+
 avg_stars_and_sent <- aggregate(cbind(Sent_QDAP,stars_business) ~ name_business_or_review + address, PA_shops, mean)
 ```
 
+
+
+```{r}
+review_spread <- as.data.frame(table(PA_shops[PA_shops$name_business_or_review == "Cosi",]$stars_review))
+ggplot(review_spread, aes(x = Var1, y = Freq)) + geom_bar(stat= "identity")
+```
+
+```{r}
+ggplot(mat) + 
+  geom_bar(aes())
+```
+
 ```{r}
 #linear regression on the averages b/w stars and sentiment
 summary(lm(stars_business ~ Sent_QDAP, avg_stars_and_sent))
@@ -82,7 +94,7 @@ summary(lm(stars_business ~ Sent_QDAP, avg_stars_and_sent))
 ```{r}
 #linear regression when not averaged out
 summary(lm(stars_business ~ Sent_QDAP, PA_shops))
-```
+``` 
 
 The big takeaway b/w the 2 linear regressions done above, is that 1 individual review sentiment may not be a major predictor for star rating, but the average of them are. So that's why it's important to listen to ways to improve reviews. 
 
@@ -104,7 +116,7 @@ positive_docs <- Corpus(VectorSource(positive_resp_texts))
 negative_docs <- Corpus(VectorSource(negative_resp_texts))
 ```
 
-```{r}
+```{r, warning=FALSE}
 #Cleaning positive docs
 positive_docs <- positive_docs %>%
   tm_map(removeNumbers) %>%
@@ -114,7 +126,7 @@ positive_docs <- tm_map(positive_docs, content_transformer(tolower))
 positive_docs <- tm_map(positive_docs, removeWords, stopwords("english"))
 ```
 
-```{r}
+```{r, warning=FALSE}
 #Cleaning negative docs
 negative_docs <- negative_docs %>%
   tm_map(removeNumbers) %>%
@@ -133,7 +145,6 @@ positive_words <- sort(rowSums(positive_matrix),decreasing=TRUE)
 negative_words <- sort(rowSums(negative_matrix),decreasing=TRUE)
 positive_df <- data.frame(word = names(positive_words),freq=positive_words)
 negative_df <- data.frame(word = names(negative_words),freq=negative_words)
-
 ```
 
 ```{r}
@@ -147,7 +158,8 @@ filtered_negative_df <- negative_df %>%
 
 ```{r}
 #Add additional filtering down to keywords
-extra_removal_words <- c("starbucks", "ive", "didnt", "dont", "one", "can", "get", "just", "also", "know", "great", "good", "love", "make", "like", "place", "really", "even", "always", "best", "well", "coffee")
+extra_removal_words <- c("starbucks", "ive", "didnt", "dont", "one", "can", "get", "just", "also", "know", "great", "good", "love", "make", "like", "place", "really", "even", "always", "best", "well", "coffee", "tea", "latte", "cappucino", "cappuccino", "bad", "poor", "get", "best", "just", "friendly", "nice", "back", "pretty", "super", "clean", "location", "day", "work", "perfect", "city", "town","neighborhood", "philly", "open", "horrible", "terrible", "disappointed", "woman", "extremely", "order", "amazing", "ordered", "recommend", "enjoy", "awesome", "excellent")
+
 filtered_positive_df <- filtered_positive_df %>% 
   filter(!(word %in% extra_removal_words))
 
@@ -175,5 +187,43 @@ wordcloud(words = filtered_positive_df[!(filtered_positive_df$word %in% head(fil
 ```{r}
 #generate negative word cloud of negative exclusive words 
 wordcloud(words = filtered_negative_df[!(filtered_negative_df$word %in% head(filtered_positive_df$word, n = 30)),]$word, freq = filtered_negative_df[!(filtered_negative_df$word %in% head(filtered_positive_df$word, n = 30)),]$freq, min.freq = 1,           max.words=20, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+```
+
+
+```{r}
+#Attributes Analysis 
+fromJSON(gsub("none", "null", tolower(PA_shops$attributes[333])))
+```
+
+```{r}
+#Attributes Analysis 
+JSON_df <- data.frame(matrix(ncol = 1, nrow = 0))
+colnames(JSON_df) <- c("holder")
+for(i in 1:length(PA_shops$attributes)){
+  #print(i)
+  if(!is.na(PA_shops$attributes[i])){
+    tester_df <- as.data.frame(fromJSON(gsub('""', '"', gsub("none", '"none"', tolower(PA_shops$attributes[i]))))) 
+    tester_df[] <- lapply(tester_df, as.character)
+    JSON_df = bind_rows(JSON_df, tester_df)
+  }
+  else{
+    JSON_df[nrow(JSON_df) +1,] = "N/A"
+  }
+}
+```
+
+```{r}
+JSON_df[JSON_df == "true"] <- 1 
+JSON_df[JSON_df == "none"] <- 0
+JSON_df[JSON_df == "false"] <- 0
+JSON_df[JSON_df == "FALSE"] <- 0
+JSON_df[JSON_df == "TRUE"] <- 1
+JSON_df[JSON_df == "no"] <- 0
+JSON_df[JSON_df == "free"] <- 1
+JSON_df[JSON_df == "N/A"] <- NA
+```
+
+```{r}
+regression_JSON_df <- JSON_df[,c(2,3,4,5,6,7,8,10,12,13,14,15,16,17)]
 ```
 
