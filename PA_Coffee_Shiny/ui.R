@@ -22,8 +22,16 @@ library(superheat)
 library(ggrepel)
 library(DT)
 
-coffee_shops <- read_csv("Shiny_Data/best_filtered_smaller_data.csv")
-PA_shops <- coffee_shops[coffee_shops$state == "PA",]
+PA_shops <- read_csv("Shiny_Data/PA_Yelp_Coffee_Data.csv")
+PA_shops$Sent_QDAP <- analyzeSentiment(PA_shops$text)$SentimentQDAP
+PA_shops <- PA_shops[!is.na(PA_shops$Sent_QDAP),]
+PA_shops$Sent_direct <- convertToDirection(PA_shops$Sent_QDAP)
+PA_shops$Sent_resp <- 0
+#PA_shops$Sent_resp[PA_shops$Sent_direct == "positive"] <- 1
+#PA_shops$Sent_resp[PA_shops$Sent_direct == "negative"] <- -1
+## Changing to handle adjusted scores 
+PA_shops$Sent_resp[PA_shops$Sent_QDAP < quantile(PA_shops$Sent_QDAP)[3] - .05] <- -1
+PA_shops$Sent_resp[PA_shops$Sent_QDAP > quantile(PA_shops$Sent_QDAP)[3] + .05] <- 1
 
 
 

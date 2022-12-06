@@ -22,8 +22,8 @@ library(superheat)
 library(ggrepel)
 library(DT)
 
-coffee_shops <- read_csv("Shiny_Data/best_filtered_smaller_data.csv")
-PA_shops <- coffee_shops[coffee_shops$state == "PA",]
+PA_shops <- read_csv("Shiny_Data/PA_Yelp_Coffee_Data.csv")
+
 PA_shops$Sent_QDAP <- analyzeSentiment(PA_shops$text)$SentimentQDAP
 PA_shops <- PA_shops[!is.na(PA_shops$Sent_QDAP),]
 PA_shops$Sent_direct <- convertToDirection(PA_shops$Sent_QDAP)
@@ -33,7 +33,6 @@ PA_shops$Sent_resp <- 0
 ## Changing to handle adjusted scores 
 PA_shops$Sent_resp[PA_shops$Sent_QDAP < quantile(PA_shops$Sent_QDAP)[3] - .05] <- -1
 PA_shops$Sent_resp[PA_shops$Sent_QDAP > quantile(PA_shops$Sent_QDAP)[3] + .05] <- 1
-avg_stars_and_sent <- aggregate(cbind(Sent_QDAP,stars_business) ~ name_business_or_review + address, PA_shops, mean)
 
 extra_removal_words <- c("starbucks", "ive", "didnt", "dont", "one", "can", "get", "just", "also", "know", "great", "good", "love", "make", "like", "place", "really", "even", "always", "best", "well", "coffee", "tea", "latte", "cappucino", "cappuccino", "bad", "poor", "get", "best", "just", "friendly", "nice", "back", "pretty", "super", "clean", "location", "day", "work", "perfect", "city", "town","neighborhood", "philly", "open", "horrible", "terrible", "disappointed", "woman", "extremely", "order", "amazing", "ordered", "recommend", "enjoy", "awesome", "excellent", "times", "short", "coming", "worse", "hate")
 

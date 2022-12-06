@@ -33,17 +33,19 @@ library(DT)
 
 
 ```{r}
-coffee_shops <- read_csv("/Users/marwanlloyd/Github/Stat628_Module3_Group3/best_filtered_smaller_data.csv")
+#coffee_shops <- read_csv("/Users/marwanlloyd/Github/Stat628_Module3_Group3/best_filtered_smaller_data.csv")
+PA_shops <- read_csv("PA_Coffee_Shiny/Shiny_Data/PA_Yelp_Coffee_Data.csv")
 ```
 
 ```{r}
 #Count reviews per state 
 
-table(coffee_shops$state)
+#table(coffee_shops$state)
 
 #filter to only PA because that has the most 
 
-PA_shops <- coffee_shops[coffee_shops$state == "PA",]
+#PA_shops <- coffee_shops[coffee_shops$state == "PA",]
+
 
 #Get all PAs that aren't starbucks 
 #PA_shops_2 <- PA_shops[!grepl("Starbuck", PA_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
