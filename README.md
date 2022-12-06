@@ -27,4 +27,4 @@ In this module, we focus on using data from Yelp which contains information abou
 * PA_Coffee_Shiny
 * Presentations
 * Summary: STAT_628_Module_3_Summary.pdf
-* ShinyApp Link: 
+* ShinyApp Link: http://mlloyd05.shinyapps.io/pa_coffee_shiny/
