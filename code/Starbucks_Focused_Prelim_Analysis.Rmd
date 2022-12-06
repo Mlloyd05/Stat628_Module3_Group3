@@ -1,0 +1,155 @@
+---
+title: "Starbucks_Focused_Analysis"
+author: "Marwan Lloyd"
+date: '2022-11-17'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(shiny)
+library(tidyverse)
+library(lubridate)
+library(tidygraph)
+library(ggraph)
+library(ggplot2)
+library(utils)
+library(SentimentAnalysis)
+library(SnowballC)
+library(wordcloud)
+library(tm)
+library(stopwords)
+```
+
+```{r}
+coffee_shops <- read_csv("../data/best_filtered_smaller_data.csv")
+starbucks <- coffee_shops[grepl("Starbuck", coffee_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
+## IF WE WANT TO CHANGE TO NON STARBUCKS THEN MAKE THIS BELOW
+##coffee_shops[!grepl("Starbuck", coffee_shops$name_business_or_review, fixed = FALSE, ignore.case = TRUE),]
+```
+
+
+```{r}
+starbucks$Sent_QDAP <- analyzeSentiment(starbucks$text)$SentimentQDAP
+starbucks$Sent_direct <- convertToDirection(starbucks$Sent_QDAP)
+starbucks$Sent_resp <- 0
+##starbucks$Sent_resp[starbucks$Sent_direct == "positive"] <- 1
+##starbucks$Sent_resp[starbucks$Sent_direct == "negative"] <- -1
+## Changing to handle adjusted scores 
+starbucks$Sent_resp[starbucks$Sent_QDAP < quantile(starbucks$Sent_QDAP)[3] - .05] <- -1
+starbucks$Sent_resp[starbucks$Sent_QDAP > quantile(starbucks$Sent_QDAP)[3] + .05] <- 1
+```
+
+```{r}
+#Plot Sentiment Values
+plotSentiment(starbucks$Sent_QDAP)
+```
+
+```{r}
+ggplot(starbucks)+
+  geom_point(aes(starbucks$stars_business, starbucks$Sent_QDAP)) +
+  labs(x = "Business Rating",
+       y = "Review Sentiment Score") + theme(plot.title = element_text(hjust = 0.5)) + labs(title = "Review Sentiment Spread Across Ratings")
+```
+
+```{r}
+avg_stars_and_sent <- aggregate(cbind(Sent_QDAP,stars_business) ~ name_business_or_review + address, starbucks, mean)
+```
+
+```{r}
+#linear regression on the averages b/w stars and sentiment
+summary(lm(stars_business ~ Sent_QDAP, avg_stars_and_sent))
+```
+
+```{r}
+#linear regression when not averaged out
+summary(lm(stars_business ~ Sent_QDAP, starbucks))
+```
+
+```{r}
+plot(avg_stars_and_sent$Sent_QDAP, avg_stars_and_sent$stars_business,
+     main = "Avg Sentiment vs. Business Star Rating",
+     xlab = "Avg Sentiment",
+     ylab = "Star Rating")
+abline(lm(stars_business ~ Sent_QDAP, avg_stars_and_sent), col = "red")
+```
+
+```{r}
+#Generating Word Clouds setup
+
+positive_resp_texts <- starbucks[starbucks$Sent_resp == 1,]$text
+negative_resp_texts <- starbucks[starbucks$Sent_resp == -1,]$text
+positive_docs <- Corpus(VectorSource(positive_resp_texts))
+negative_docs <- Corpus(VectorSource(negative_resp_texts))
+```
+
+```{r}
+#Cleaning positive docs
+positive_docs <- positive_docs %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+positive_docs <- tm_map(positive_docs, content_transformer(tolower))
+positive_docs <- tm_map(positive_docs, removeWords, stopwords("english"))
+```
+
+```{r}
+#Cleaning negative docs
+negative_docs <- negative_docs %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+negative_docs <- tm_map(negative_docs, content_transformer(tolower))
+negative_docs <- tm_map(negative_docs, removeWords, stopwords("english"))
+```
+
+```{r}
+positive_dtm <- TermDocumentMatrix(positive_docs) 
+negative_dtm <- TermDocumentMatrix(negative_docs)
+positive_matrix <- as.matrix(positive_dtm)
+negative_matrix <- as.matrix(negative_dtm)
+positive_words <- sort(rowSums(positive_matrix),decreasing=TRUE)
+negative_words <- sort(rowSums(negative_matrix),decreasing=TRUE)
+positive_df <- data.frame(word = names(positive_words),freq=positive_words)
+negative_df <- data.frame(word = names(negative_words),freq=negative_words)
+
+```
+
+```{r}
+#filter out stop words 
+filtered_positive_df <- positive_df %>% 
+  filter(!(word %in% stopwords(source = "smart")))
+
+filtered_negative_df <- negative_df %>% 
+  filter(!(word %in% stopwords(source = "smart")))
+```
+
+```{r}
+#Add additional filtering down to keywords
+extra_removal_words <- c("starbucks", "ive", "didnt", "dont", "one", "can", "get", "just", "also", "know", "coffee", "")
+filtered_positive_df <- positive_df %>% 
+  filter(!(word %in% extra_removal_words))
+
+filtered_negative_df <- negative_df %>% 
+  filter(!(word %in% extra_removal_words))
+```
+
+```{r}
+#Generating Positive Word Cloud
+wordcloud(words = filtered_positive_df$word, freq = filtered_positive_df$freq, min.freq = 10,           max.words=60, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+```
+
+```{r}
+#generate negative word cloud 
+wordcloud(words = filtered_negative_df$word, freq = filtered_negative_df$freq, min.freq = 10,           max.words=60, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+```
+
+```{r}
+#generate positive word cloud of positive exclusive words 
+wordcloud(words = filtered_positive_df[!(filtered_positive_df$word %in% head(filtered_negative_df$word, n = 30)),]$word, freq = filtered_positive_df[!(filtered_positive_df$word %in% head(filtered_negative_df$word, n = 30)),]$freq, min.freq = 1,           max.words=60, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+```
+
+
+```{r}
+#generate negative word cloud of negative exclusive words 
+wordcloud(words = filtered_negative_df[!(filtered_negative_df$word %in% head(filtered_positive_df$word, n = 30)),]$word, freq = filtered_negative_df[!(filtered_negative_df$word %in% head(filtered_positive_df$word, n = 30)),]$freq, min.freq = 1,           max.words=60, random.order=FALSE, rot.per=0.35,            colors=brewer.pal(8, "Dark2"))
+```
