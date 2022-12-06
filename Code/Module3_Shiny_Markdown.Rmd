@@ -8,7 +8,6 @@ output: html_document
 ```{r setup, include=FALSE}
 library(shiny)
 library(tidyverse)
-library(lubridate)
 library(tidygraph)
 library(ggraph)
 library(ggplot2)
@@ -21,13 +20,9 @@ library(stopwords)
 library(shinythemes)
 library(leaflet)
 library(tidytext)
-library(jsonlite)
 library(stringr)
 library(bipartite)
 library(tidytext)
-library(topicmodels)
-library(superheat)
-library(ggrepel)
 library(DT)
 ```
 
@@ -128,8 +123,7 @@ ui <-
   navbarPage("PA Coffee Shops", collapsible = TRUE, inverse = TRUE, theme = shinytheme("spacelab"),
              tabPanel("Store Selection",
                       sidebarLayout(sidebarPanel(selectInput("Shop", "Shop:", choices = sort(unique(PA_shops$name_business_or_review))), 
-                                                 conditionalPanel("input.Shop!=''",
-                                                                  uiOutput("address"))),
+                                                 uiOutput("address")),
                                     mainPanel(
                                       tabsetPanel(
                                         tabPanel("Top Words",  
@@ -243,7 +237,7 @@ top_words$"Positive Frequency" <- apply(top_words, 1, function(x) if(x[3] == TRU
 top_words$"Negative Frequency" <- apply(top_words, 1, function(x) if(x[4] == TRUE){negative_df[negative_df$word == x[2],]$freq} else{0})
 
 
-apply(top_words, 1, function(x) print(paste0("\\b",x[1],"\\b")))
+#apply(top_words, 1, function(x) print(paste0("\\b",x[1],"\\b")))
 
 #for(i in 1:15){
 #  if(length(top_words$"Positive Frequency"[i]) == 0)
@@ -255,7 +249,7 @@ apply(top_words, 1, function(x) print(paste0("\\b",x[1],"\\b")))
 #print(positive_df)
 
 #print(apply(top_words, 1, function(x) if(x[3] == TRUE){length(positive_df[positive_df$word == x[1],]$freq)} else{0}) )
-print(top_words$"Positive Frequency")
+#print(top_words$"Positive Frequency")
 #print(top_words$positive_dummy)
 
 col_order <- c("Positives", "Positive Frequency", "Negatives", "Negative Frequency", "positive_dummy", "negative_dummy")
